@@ -24,7 +24,7 @@ O monitor executa diretamente no terminal (TUI - Text User Interface), com atual
    Total: 16000 MB
    Usado: 7232 MB
    Livre: 8768 MB
-🚀 Funcionalidades
+Funcionalidades
 Monitoramento de CPU: Algoritmo preciso que calcula a utilização baseada em deltas de tempo lidos de /proc/stat.
 
 Gerenciamento de Memória: Parsing eficiente de /proc/meminfo para categorizar memória total, disponível e em uso.
@@ -35,17 +35,9 @@ Zero Dependências: Funciona em qualquer distribuição Linux com a libc padrão
 
 Build System Profissional: Automação via Makefile com gerenciamento de dependências e separação de objetos.
 
-🧠 Arquitetura e Decisões Técnicas
-Este projeto foi desenvolvido com foco em Systems Programming e performance.
+Cálculo e Arquitetura Utilizados
 
-1. Filosofia "Tudo é um Arquivo"
-Ao invés de usar APIs de alto nível, o software lê diretamente os arquivos virtuais do Kernel:
-
-/proc/stat: Para métricas brutas do processador.
-
-/proc/meminfo: Para estatísticas de paginação e memória física.
-
-2. Algoritmo de Cálculo da CPU
+1. Algoritmo de Cálculo da CPU
 O Linux não fornece a porcentagem de CPU pronta. O cálculo é feito matematicamente:
 
 Leitura dos contadores de ciclos (user, nice, system, idle) no tempo T0.
@@ -54,9 +46,9 @@ Sleep (intervalo de amostragem).
 
 Leitura dos contadores no tempo T1.
 
-Cálculo do Delta (Diferença) entre T1 e T0 para determinar a porcentagem de tempo que a CPU passou processando vs ociosa.
+Cálculo do Delta entre T1 e T0 para determinar a porcentagem de tempo que a CPU passou processando vs ociosa.
 
-3. Organização Modular
+2. Organização Modular
 O código segue padrões de mercado para facilitar a manutenção e escalabilidade:
 
 Snippet de código
@@ -74,6 +66,8 @@ Snippet de código
 ├── obj/            # Arquivos objeto compilados (.o)
 ├── bin/            # Executável final
 └── Makefile        # Script de automação de build
+
+
 🛠️ Instalação e Execução
 Pré-requisitos
 GCC (GNU Compiler Collection)
@@ -90,17 +84,6 @@ make
 
 # 2. Rodar o monitor
 make run
-
-# (Opcional) Limpar arquivos temporários e binários
-make clean
-🔮 Roadmap (Próximos Passos)
-[ ] Implementar monitoramento individual por núcleo (Multi-core parsing).
-
-[ ] Adicionar estatísticas de Rede (Bytes enviados/recebidos).
-
-[ ] Adicionar suporte a argumentos de linha de comando (ex: ./monitor --refresh 2).
-
-[ ] Criar modo daemon para execução em background.
 
 👨‍💻 Autor
 Desenvolvido por André Luis. Projeto criado para fins de estudo aprofundado em Estrutura de Dados, C e Linux Internals.
