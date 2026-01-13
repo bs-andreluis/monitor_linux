@@ -10,19 +10,16 @@ int get_memory_usage(MemStats *stats) {
     long mem_total = 0;
     long mem_available = 0;
     
-    // Lê o arquivo linha por linha até achar o que queremos
     while (fgets(buffer, sizeof(buffer), fp)) {
-        // Verifica se a linha começa com "MemTotal:"
         if (strncmp(buffer, "MemTotal:", 9) == 0) {
             sscanf(buffer, "MemTotal: %ld kB", &mem_total);
         }
-        // Verifica se a linha começa com "MemAvailable:"
-        // (Nota: MemAvailable é mais preciso que calcular free+buffers+cached manualmente)
+        
         else if (strncmp(buffer, "MemAvailable:", 13) == 0) {
             sscanf(buffer, "MemAvailable: %ld kB", &mem_available);
         }
         
-        // Se já achamos os dois, podemos parar de ler
+    
         if (mem_total > 0 && mem_available > 0) break;
     }
 
