@@ -1,29 +1,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "cpu.h"
 
+// Função para pegar o número de núcleos (NOVA)
+int get_cpu_count() {
+    // Sysconf é a forma POSIX de pegar config do sistema
+    return (int)sysconf(_SC_NPROCESSORS_ONLN);
+}
 
-int read_cpu_stats(CpuStats *stats) {
+// Função para ler todos os núcleos (NOVA)
+int read_all_cpus(CpuStats *stats, int num_cores) {
     FILE *fp = fopen("/proc/stat", "r");
-    if (!fp) {
-        perror("Erro ao abrir /proc/stat");
-        return -1;
-    }
+    if (!fp) return -1;
 
     char buffer[1024];
-    if (fgets(buffer, sizeof(buffer), fp)) {  
-        sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu",
-               &stats->user, &stats->nice, &stats->system,
-               &stats->idle, &stats->iowait, &stats->irq,
-               &stats->softirq, &stats->steal);
+    
+    // Vamos ler (num_cores + 1) linhas. 
+    // A primeira linha é "cpu" (global), as próximas são "cpu0", "cpu1"...
+    for (int i = 0; i <= num_cores; i++) {
+        if (!fgets(buffer, sizeof(buffer), fp)) break;
+
+        // Verifica se a linha começa com "cpu"
+        if (strncmp(buffer, "cpu", 3) == 0) {
+            sscanf(buffer, "%*s %llu %llu %llu %llu %llu %llu %llu %llu",
+                   &stats[i].user, &stats[i].nice, &stats[i].system,
+                   &stats[i].idle, &stats[i].iowait, &stats[i].irq,
+                   &stats[i].softirq, &stats[i].steal);
+        }
     }
 
     fclose(fp);
     return 0;
 }
 
-
+// Essa função se mantém igual, mas é necessária para o cálculo
 double calculate_cpu_usage(const CpuStats *prev, const CpuStats *curr) {
     unsigned long long prev_idle = prev->idle + prev->iowait;
     unsigned long long curr_idle = curr->idle + curr->iowait;

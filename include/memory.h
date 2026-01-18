@@ -3,8 +3,8 @@
 
 typedef struct {
     long total_kb;
-    long available_kb; // A memória realmente disponível para uso
-    long used_kb;      // Calculado como: total - available
+    long available_kb; 
+    long used_kb;      
     double used_percent;
 } MemStats;
 

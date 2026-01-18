@@ -4,79 +4,97 @@
 ![Platform](https://img.shields.io/badge/platform-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 
-Um monitor de recursos de sistema leve, eficiente e modular, desenvolvido em **C** para ambientes Linux. 
+Um monitor de recursos de sistema leve, eficiente e modular, desenvolvido puramente em **C** para ambientes Linux. 
 
-Este projeto interage diretamente com o **Kernel** através do sistema de arquivos virtual `/proc`, realizando a extração e cálculo de métricas em tempo real sem dependências de bibliotecas externas pesadas.
+Este projeto interage diretamente com o **Kernel Space** através do sistema de arquivos virtual `/proc`, realizando a extração, parsing e cálculo de métricas em tempo real sem dependências de bibliotecas externas.
 
 ---
 
 ## 📸 Demonstração
 
-O monitor executa diretamente no terminal (TUI - Text User Interface), com atualização em tempo real e visualização gráfica via caracteres ASCII.
+O monitor executa diretamente no terminal (TUI), detectando automaticamente o número de núcleos do processador e exibindo tráfego de rede em tempo real.
 
 ```text
-=== MONITOR DE RECURSOS LINUX (Ctrl+C para sair) ===
+=== SYSTEM MONITOR (Cores: 4) ===
 
-[CPU] Uso: 12.50%
-[#####               ]
+CPU Global:  18.5% [###                 ]
 
-[MEMORIA] Uso: 45.20% 
-   Total: 16000 MB
-   Usado: 7232 MB
-   Livre: 8768 MB
-Funcionalidades
-Monitoramento de CPU: Algoritmo preciso que calcula a utilização baseada em deltas de tempo lidos de /proc/stat.
+--- Cores ---
+Core 0:  12.0%      Core 1:  24.5%
+Core 2:   5.0%      Core 3:  32.0%
 
-Gerenciamento de Memória: Parsing eficiente de /proc/meminfo para categorizar memória total, disponível e em uso.
+--- Memória ---
+RAM: 45.2% [#########           ] (7232/16000 MB)
 
-Interface Limpa: Atualização de tela sem "flicker" utilizando códigos de escape ANSI.
+--- Rede (Total) ---
+Download:   1250.45 KB/s
+Upload:      350.20 KB/s
 
-Zero Dependências: Funciona em qualquer distribuição Linux com a libc padrão.
+🚀 Funcionalidades
 
-Build System Profissional: Automação via Makefile com gerenciamento de dependências e separação de objetos.
+    Monitoramento Multi-Core: Detecção automática de núcleos (via sysconf) e monitoramento individual de carga por thread de hardware.
 
-Cálculo e Arquitetura Utilizados
+    Estatísticas de Rede: Cálculo de velocidade de Download/Upload em tempo real lendo /proc/net/dev.
 
-1. Algoritmo de Cálculo da CPU
-O Linux não fornece a porcentagem de CPU pronta. O cálculo é feito matematicamente:
+    Algoritmo de CPU Preciso: Cálculo de utilização baseado em deltas de tempo (Jiffies) entre leituras do kernel.
 
-Leitura dos contadores de ciclos (user, nice, system, idle) no tempo T0.
+    Gerenciamento de Memória: Parsing de /proc/meminfo para categorizar memória total, disponível e em uso.
 
-Sleep (intervalo de amostragem).
+    Interface Otimizada: Atualização de tela sem "flicker" utilizando códigos de escape ANSI e buffer de saída.
 
-Leitura dos contadores no tempo T1.
+    Zero Dependências: Funciona em qualquer distribuição Linux moderna apenas com a biblioteca padrão (libc).
 
-Cálculo do Delta entre T1 e T0 para determinar a porcentagem de tempo que a CPU passou processando vs ociosa.
+🧠 Arquitetura e Decisões Técnicas
 
-2. Organização Modular
-O código segue padrões de mercado para facilitar a manutenção e escalabilidade:
+Este projeto demonstra conceitos avançados de Systems Programming:
+1. Filosofia "Tudo é um Arquivo"
 
+O software não utiliza APIs de alto nível, mas sim a interface direta do Kernel:
+
+    /proc/stat: Métricas de CPU (Global e por núcleo).
+
+    /proc/meminfo: Paginação e memória física.
+
+    /proc/net/dev: Bytes transmitidos e recebidos pelas interfaces de rede.
+
+2. Gerenciamento de Memória Dinâmica
+
+Para suportar o monitoramento individual de núcleos ("Per-core monitoring"), o programa não utiliza arrays fixos.
+
+    O número de núcleos é consultado em tempo de execução via sysconf(_SC_NPROCESSORS_ONLN).
+
+    Estruturas de dados são alocadas dinamicamente (malloc) para armazenar os estados anteriores e atuais de cada núcleo, garantindo escalabilidade de um Raspberry Pi a um Servidor Xeon.
+
+3. Estrutura Modular
+
+O código segue padrões de organização para facilitar a manutenção:
 Snippet de código
 
 .
 ├── include/        # Contratos e definições (.h)
-│   ├── cpu.h
-│   ├── memory.h
-│   └── monitor.h
+│   ├── cpu.h       # Estruturas de CPU
+│   ├── memory.h    # Estruturas de Memória
+│   ├── network.h   # Estruturas de Rede
+│   └── monitor.h   # Utils gerais
 ├── src/            # Implementação da lógica (.c)
 │   ├── main.c      # Loop principal e orquestração
-│   ├── cpu.c       # Lógica de parsing da CPU
-│   ├── memory.c    # Lógica de parsing de Memória
-│   └── utils.c     # Helpers de UI
+│   ├── cpu.c       # Lógica de parsing e cálculo de deltas
+│   ├── memory.c    # Leitura de memória
+│   └── network.c   # Cálculo de throughput de rede
 ├── obj/            # Arquivos objeto compilados (.o)
 ├── bin/            # Executável final
-└── Makefile        # Script de automação de build
-
+└── Makefile        # Automação de build
 
 🛠️ Instalação e Execução
 Pré-requisitos
-GCC (GNU Compiler Collection)
 
-Make
+    GCC (GNU Compiler Collection)
+
+    Make
 
 Como rodar
-Clone este repositório e execute os comandos abaixo na raiz do projeto:
 
+Clone o repositório e utilize o Makefile incluído:
 Bash
 
 # 1. Compilar o projeto (Gera o executável na pasta bin/)
@@ -85,6 +103,9 @@ make
 # 2. Rodar o monitor
 make run
 
-👨‍💻 Autor
-Desenvolvido por André Luis. Projeto criado para fins de estudo aprofundado em Estrutura de Dados, C e Linux Internals.
+# (Opcional) Limpar arquivos temporários
+make clean
 
+👨‍💻 Autor
+
+Desenvolvido por André Luis. Projeto criado para fins de estudo aprofundado em Estrutura de Dados, Ponteiros e Linux Internals.
